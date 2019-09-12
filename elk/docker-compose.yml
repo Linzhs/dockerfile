@@ -1,7 +1,9 @@
 version: '1.0'
-networks: 
-  elknet:
 services:
   elasticsearch:
-    image: 
+    image: linzhs/elasticsearch:7.3.0
+    deploy:
+      replacas:
   kibana:
+networks: 
+  elknet:
