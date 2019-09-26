@@ -1,9 +1,52 @@
 version: '1.0'
 services:
   elasticsearch:
-    image: linzhs/elasticsearch:7.3.0
+    image: linzhs/elasticsearch:7.3.1
+    container_name: elasticsearch-dev
     deploy:
-      replacas:
+      replacas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        deplay: 5s
+        max_attempts: 3
+        window: 120s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumns:
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - 19200:9200
+      - 19300:9300
+    networks:
+      - elknet
+    
   kibana:
+    image: docker.elastic.co/kibana/kibana:7.3.1
+    container_name: kibana-dev
+    enviroment:
+      - SERVER_NAME=kibana-dev
+      - ELASTICSEARCH_URL=http://elasticsearch-dev:9200
+      - XPACK_MONITORING_ENABLE=true
+    port:
+      - 15601:15601
+    networks:
+      - elknet
+    depends_on:
+      - elasticsearch
+  
+  cerebro:
+    image: cerebro:0.8.4
+    container_name: cerebro-dev
+    port:
+      - 19000:9000
+    networks:
+      - elknet
+    depends_on:
+      - elasticsearch
 networks: 
   elknet:
