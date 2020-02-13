@@ -1,39 +1,50 @@
-version: '1.0'
+# prepare operation:
+#   mkdir esdatadir
+#   chmod g+rwx esdatadir
+#   chgrp 1000 esdatadir
+
+version: '3'
 services:
   elasticsearch:
     image: linzhs/elasticsearch:7.3.1
     container_name: elasticsearch-dev
+    environment:
+      - node.name=elasticsearch-dev01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - discovery.type=single-node
+      - xpack.security.enabled=true
     deploy:
-      replacas: 2
+      replicas: 2
       update_config:
         parallelism: 2
         delay: 10s
       restart_policy:
         condition: on-failure
-        deplay: 5s
+        delay: 5s
         max_attempts: 3
         window: 120s
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    volumns:
-      - elasticsearch:/usr/share/elasticsearch/data
+    volumes:
+      - "/opt/elasticsearch/data:/usr/share/elasticsearch/data"
+      - "/opt/elasticsearch/config:/usr/share/elasticsearch/config"
     ports:
-      - 19200:9200
-      - 19300:9300
+      - "18200:9200"
     networks:
       - elknet
     
   kibana:
     image: docker.elastic.co/kibana/kibana:7.3.1
     container_name: kibana-dev
-    enviroment:
+    environment:
       - SERVER_NAME=kibana-dev
-      - ELASTICSEARCH_URL=http://elasticsearch-dev:9200
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
       - XPACK_MONITORING_ENABLE=true
-    port:
-      - 15601:15601
+    ports:
+      - "15601:5601"
     networks:
       - elknet
     depends_on:
@@ -42,8 +53,8 @@ services:
   cerebro:
     image: cerebro:0.8.4
     container_name: cerebro-dev
-    port:
-      - 19000:9000
+    ports:
+      - "19000:9000"
     networks:
       - elknet
     depends_on:
